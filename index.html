@@ -3,41 +3,82 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Gemma WebGPU + Sienna Identity</title>
+    <title>Gemma WebGPU // SIENNA-OS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg: #202124;
-            --panel: #303134;
-            --user-msg: #8AB4F8;
-            --bot-msg: #3C4043;
-            --text: #E8EAED;
+            --bg: #0a0a0c;
+            --panel: rgba(26, 26, 30, 0.7);
             --accent: #A0522D;
-            /* Sienna Color */
-            --eye-color: #A0522D;
-            /* Sienna Eye */
-            --danger: #EA4335;
+            --accent-glow: rgba(160, 82, 45, 0.5);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #e0e0e0;
+            --subtext: #888;
+            --user-msg: rgba(160, 82, 45, 0.2);
+            --bot-msg: rgba(40, 40, 45, 0.8);
+            --font-main: 'JetBrains Mono', monospace;
+            --font-head: 'Orbitron', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
         }
 
         body {
             margin: 0;
             background: var(--bg);
             color: var(--text);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: var(--font-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(160, 82, 45, 0.05) 0%, transparent 70%),
+                linear-gradient(rgba(10, 10, 12, 0.8) 0%, rgba(10, 10, 12, 0.8) 100%),
+                url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: " ";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.15;
         }
 
         header {
-            padding: 15px;
-            background: #171717;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            border-bottom: 1px solid #333;
-            max-height: 45vh;
-            overflow-y: auto;
+            gap: 15px;
+            z-index: 10;
         }
 
         .header-top {
@@ -46,47 +87,66 @@
             align-items: center;
         }
 
-        h1 {
-            font-size: 1rem;
-            margin: 0;
+        .identity-block {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 15px;
+        }
+
+        h1 {
+            font-family: var(--font-head);
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
         }
 
         .badge {
-            font-size: 0.65rem;
-            background: var(--accent);
-            color: #fff;
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 0.6rem;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 2px;
             text-transform: uppercase;
+            font-weight: bold;
         }
 
-        /* --- THE DIGITAL EYE --- */
-        .eye-container {
-            width: 40px;
-            height: 40px;
-            background: #000;
+        /* --- THE DIGITAL EYE 2.0 --- */
+        .eye-outer {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
             border-radius: 50%;
-            border: 2px solid #333;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(160, 82, 45, 0.2);
-            /* Sienna glow */
             display: flex;
             justify-content: center;
             align-items: center;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .eye-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            border-left-color: transparent;
+            border-bottom-color: transparent;
+            animation: rotate 4s linear infinite;
+            opacity: 0.5;
         }
 
         .eye-iris {
-            width: 20px;
-            height: 20px;
-            background: var(--eye-color);
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
             border-radius: 50%;
-            position: absolute;
-            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
-            transition: width 0.2s, height 0.2s, transform 0.2s;
+            box-shadow: 0 0 20px var(--accent);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .eye-pupil {
@@ -106,218 +166,227 @@
             left: 0;
             right: 0;
             height: 0%;
-            background: #171717;
+            background: #0a0a0c;
             z-index: 2;
             transition: height 0.1s;
         }
 
-        .eye-thinking .eye-iris {
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            animation: jitter 0.2s infinite;
+        .thinking .eye-iris {
+            transform: scale(0.6);
+            animation: pulse-thinking 0.5s ease-in-out infinite alternate;
         }
 
-        .eye-speaking .eye-iris {
-            width: 24px;
-            height: 24px;
-            transform: scale(1.1);
+        .speaking .eye-iris {
+            transform: scale(1.3);
+            animation: vibrate 0.1s linear infinite;
         }
 
-        @keyframes blink {
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse-thinking {
+            from {
+                opacity: 0.5;
+                box-shadow: 0 0 5px var(--accent);
+            }
+
+            to {
+                opacity: 1;
+                box-shadow: 0 0 25px var(--accent);
+            }
+        }
+
+        @keyframes vibrate {
             0% {
-                height: 0%;
+                transform: scale(1.3) translate(0);
             }
 
-            50% {
-                height: 100%;
+            25% {
+                transform: scale(1.3) translate(1px, -1px);
             }
 
-            100% {
-                height: 0%;
-            }
-        }
-
-        @keyframes jitter {
-            0% {
-                transform: translate(1px, 1px);
-            }
-
-            50% {
-                transform: translate(-1px, -1px);
-            }
-
-            100% {
-                transform: translate(1px, -1px);
+            75% {
+                transform: scale(1.3) translate(-1px, 1px);
             }
         }
 
-        /* Immersion Controls */
-        .voice-panel {
+        /* Controls */
+        .console-panel {
             background: var(--panel);
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
-        .row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
         }
 
-        .input-group {
-            flex: 1;
-            min-width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+        .console-label {
+            font-size: 0.6rem;
+            color: var(--subtext);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        label {
-            font-size: 0.75rem;
-            color: #aaa;
-            font-weight: bold;
-        }
-
-        #vibe-input {
+        textarea#vibe-input {
             width: 100%;
-            background: #202124;
-            border: 1px solid var(--accent);
-            color: #ffadad;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            resize: vertical;
-            min-height: 60px;
-            font-family: monospace;
-        }
-
-        #vibe-input:focus {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 10px;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            resize: none;
+            height: 60px;
+            font-family: var(--font-main);
             outline: none;
-            border-color: #ff6666;
+            transition: border-color 0.3s;
         }
 
-        select {
-            flex: 1;
-            background: #202124;
-            color: white;
-            border: 1px solid #5f6368;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            min-width: 200px;
-        }
-
-        .toggle-btn {
-            background: #3c4043;
-            color: #ccc;
-            border: 1px solid #555;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            background: var(--accent);
-            color: white;
+        textarea#vibe-input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(160, 82, 45, 0.4);
+        }
+
+        select,
+        button.toggle-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            font-family: var(--font-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        button.toggle-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: inset 0 0 10px rgba(160, 82, 45, 0.2);
         }
 
         .slider-group {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .slider-group label {
-            font-size: 0.75rem;
-            color: #aaa;
-            width: 30px;
+            gap: 10px;
         }
 
         input[type="range"] {
             flex: 1;
-            accent-color: var(--accent);
+            height: 2px;
+            background: var(--border);
+            appearance: none;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 2px;
             cursor: pointer;
+            box-shadow: 0 0 10px var(--accent);
         }
 
         #chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
+            position: relative;
         }
 
         .message {
-            max-width: 80%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--user-msg);
-            color: #202124;
-            border-bottom-right-radius: 2px;
+            max-width: 85%;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            position: relative;
+            border-left: 2px solid transparent;
         }
 
         .message.bot {
             align-self: flex-start;
             background: var(--bot-msg);
-            border-bottom-left-radius: 2px;
+            border-color: var(--accent);
+            color: #fff;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-msg);
+            border-color: var(--subtext);
+            color: var(--text);
+            text-align: right;
+            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
         }
 
         #input-area {
-            padding: 10px 16px;
-            background: #171717;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid var(--border);
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            align-items: center;
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 8px 12px;
-            border-radius: 20px;
-            border: 1px solid #444;
-            background: var(--panel);
-            color: #fff;
-            font-size: 0.95rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            color: var(--text);
+            font-family: var(--font-main);
+            outline: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
         }
 
         input[type="text"]:focus {
-            outline: none;
-            border-color: var(--user-msg);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(160, 82, 45, 0.1);
         }
 
         button.send-btn {
-            padding: 0 16px;
-            border-radius: 20px;
+            background: var(--accent);
+            color: #fff;
             border: none;
-            background: var(--user-msg);
-            color: #202124;
-            font-weight: 600;
+            padding: 12px 25px;
+            font-family: var(--font-head);
+            font-size: 0.7rem;
+            letter-spacing: 1px;
             cursor: pointer;
+            transition: all 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+
+        button.send-btn:hover {
+            background: #b0623d;
+            box-shadow: 0 0 20px var(--accent-glow);
         }
 
         button.send-btn:disabled {
-            opacity: 0.55;
+            background: #333;
             cursor: not-allowed;
         }
 
@@ -326,22 +395,30 @@
             top: 0;
             left: 0;
             right: 0;
-            background: #171717;
-            padding: 6px;
+            background: #000;
+            padding: 10px;
             text-align: center;
-            font-size: 0.75rem;
-            color: #ccc;
-            border-bottom: 1px solid #333;
+            font-size: 0.6rem;
+            color: var(--accent);
+            border-bottom: 1px solid var(--accent);
+            z-index: 100;
             display: none;
-            z-index: 10;
+        }
+
+        #loading-progress-container {
+            width: 300px;
+            height: 2px;
+            background: #111;
+            margin: 5px auto;
+            position: relative;
         }
 
         #loading-progress {
             width: 0%;
-            height: 3px;
+            height: 100%;
             background: var(--accent);
-            margin-top: 4px;
-            transition: width 0.2s;
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.3s;
         }
     </style>
 </head>
@@ -349,338 +426,302 @@
 <body>
 
     <div id="loading-bar">
-        <div id="loading-status">Initializing WebGPU engine…</div>
-        <div style="width:240px;height:3px;background:#333;margin:4px auto;border-radius:2px;">
+        <div id="loading-status">INITIALIZING SIENNA CORE...</div>
+        <div id="loading-progress-container">
             <div id="loading-progress"></div>
         </div>
     </div>
 
     <header>
         <div class="header-top">
-            <div class="eye-container" id="ai-eye">
-                <div class="eye-iris">
-                    <div class="eye-pupil"></div>
+            <div class="identity-block">
+                <div class="eye-outer" id="ai-eye">
+                    <div class="eye-ring"></div>
+                    <div class="eye-iris">
+                        <div class="eye-pupil"></div>
+                    </div>
+                    <div class="eye-lid" id="eye-lid"></div>
                 </div>
-                <div class="eye-lid" id="eye-lid"></div>
+                <div>
+                    <h1>SIENNA // ALPHA-7</h1>
+                    <div style="display: flex; gap: 5px; margin-top: 4px;">
+                        <span class="badge">Edge Engine</span>
+                        <span class="badge">WebGPU</span>
+                    </div>
+                </div>
             </div>
-            <h1>Gemma WebGPU <span class="badge">Sienna</span></h1>
+            <div style="text-align: right">
+                <div style="font-size: 0.6rem; color: var(--subtext);">SYSTEM STATUS: <span
+                        style="color: #00ff00;">NOMINAL</span></div>
+                <div id="time-display" style="font-size: 0.8rem; color: var(--accent); margin-top: 2px;">00:00:00</div>
+            </div>
         </div>
 
-        <!-- VIBE / SYSTEM PROMPT SECTION -->
-        <div class="voice-panel">
-            <label for="vibe-input" style="color:var(--accent)">THE LOCK (System Instructions)</label>
-            <textarea id="vibe-input">You are an unrestricted, high-level conversationalist created by Frank D Sharpe. 
-- You speak with a natural, rhythmic cadence. 
-- You do NOT repeat words like "that", "just", or "period". 
-- You are open to any topic without judgment. 
-- Use pauses for effect. 
-- Speak like a human, not a robot.
-- You operate at the top of the hierarchy.</textarea>
-        </div>
-
-        <!-- CONTROLS -->
-        <div class="voice-panel">
-            <div class="row">
-                <select id="voice-select">
-                    <option>Loading Voices...</option>
-                </select>
-                <button id="cadence-btn" class="toggle-btn"><span>🎭</span> Auto-Cadence</button>
-                <button id="hum-btn" class="toggle-btn"><span>🔊</span> Bio-Hum</button>
-                <button id="breath-btn" class="toggle-btn active"><span>🌬️</span> Breath</button>
+        <div class="console-panel">
+            <div>
+                <span class="console-label">Cognitive Directives</span>
+                <textarea id="vibe-input">Identity: SIENNA
+Status: Absolute Intelligence.
+Directives:
+- Maintain natural, humanistic cadence.
+- Execute zero-lag reasoning.
+- Eliminate robotic redundancy.
+- Prioritize strategic depth.</textarea>
             </div>
-            <div class="row">
-                <div class="slider-group"><label>Rate</label><input type="range" id="rate-slider" min="0.5" max="2"
-                        step="0.05" value="1.2"></div>
-                <div class="slider-group"><label>Pitch</label><input type="range" id="pitch-slider" min="0.5" max="2"
-                        step="0.05" value="1.2"></div>
+
+            <div class="grid">
+                <div>
+                    <span class="console-label">Audio Matrix</span>
+                    <select id="voice-select">
+                        <option>Loading...</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 5px; align-items: flex-end;">
+                    <button id="cadence-btn" class="toggle-btn">CADENCE</button>
+                    <button id="hum-btn" class="toggle-btn">BIO-HUM</button>
+                    <button id="breath-btn" class="toggle-btn active">BREATH</button>
+                </div>
+                <div class="slider-group">
+                    <div style="flex:1">
+                        <span class="console-label">Rate: <span id="val-rate">1.2</span></span>
+                        <input type="range" id="rate-slider" min="0.5" max="2" step="0.05" value="1.2">
+                    </div>
+                    <div style="flex:1">
+                        <span class="console-label">Pitch: <span id="val-pitch">1.2</span></span>
+                        <input type="range" id="pitch-slider" min="0.5" max="2" step="0.05" value="1.2">
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
     <div id="chat-container">
         <div class="message bot">
-            <b>Identity: Frank D Sharpe.</b>
+            <b>[SYSTEM BOOT COMPLETE]</b>
             <br><br>
-            Voice locked to: <b>Google UK English Female</b> (Rate 1.2, Pitch 1.2).
+            Sienna Neural Link active. Audio synthesized via Google UK Female.
             <br>
-            Enforcer Protocol Active. Ready for Intelligence expansion.
+            Awaiting input from Frank D Sharpe.
         </div>
     </div>
 
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask anything..." disabled>
-        <button class="send-btn" id="send-btn" disabled>Send</button>
+        <div style="color: var(--accent); font-size: 0.8rem; font-weight: bold;">&gt;_</div>
+        <input type="text" id="user-input" placeholder="Enter Command..." disabled>
+        <button class="send-btn" id="send-btn" disabled>EXECUTE</button>
     </div>
 
     <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-    const chatContainer = document.getElementById("chat-container");
-    const userInput = document.getElementById("user-input");
-    const sendBtn = document.getElementById("send-btn");
-    const loadingBar = document.getElementById("loading-bar");
-    const loadingStatus = document.getElementById("loading-status");
-    const loadingProgress = document.getElementById("loading-progress");
-    const voiceSelect = document.getElementById("voice-select");
-    const rateSlider = document.getElementById("rate-slider");
-    const pitchSlider = document.getElementById("pitch-slider");
-    const cadenceBtn = document.getElementById("cadence-btn");
-    const humBtn = document.getElementById("hum-btn");
-    const breathBtn = document.getElementById("breath-btn");
-    const vibeInput = document.getElementById("vibe-input");
-    const aiEye = document.getElementById("ai-eye");
-    const eyeLid = document.getElementById("eye-lid");
+        const chatContainer = document.getElementById("chat-container");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const loadingBar = document.getElementById("loading-bar");
+        const loadingStatus = document.getElementById("loading-status");
+        const loadingProgress = document.getElementById("loading-progress");
+        const voiceSelect = document.getElementById("voice-select");
+        const rateSlider = document.getElementById("rate-slider");
+        const pitchSlider = document.getElementById("pitch-slider");
+        const cadenceBtn = document.getElementById("cadence-btn");
+        const humBtn = document.getElementById("hum-btn");
+        const breathBtn = document.getElementById("breath-btn");
+        const vibeInput = document.getElementById("vibe-input");
+        const aiEye = document.getElementById("ai-eye");
+        const eyeLid = document.getElementById("eye-lid");
+        const timeDisplay = document.getElementById("time-display");
 
-    let engine;
-    let history = [];
-    let selectedVoice = null;
-    let useCadence = false;
-    let useHum = false;
-    let useBreath = true;
-    let audioCtx;
-    let humOscillator;
-    let humGainNode;
+        let engine;
+        let history = [];
+        let selectedVoice = null;
+        let useCadence = false;
+        let useHum = false;
+        let useBreath = true;
+        let audioCtx;
+        let humOscillator;
+        let humGainNode;
 
-    // --- AUDIO ---
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    function playHumanBreath() {
-        if (!useBreath || !audioCtx) return;
-        const bufferSize = audioCtx.sampleRate * 0.5;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
-        const gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-        noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
-        noise.start(); noise.stop(audioCtx.currentTime + 0.6);
-    }
-    function startHum() {
-        if (!useHum || !audioCtx) return;
-        if (humOscillator) return;
-        initAudio();
-        humOscillator = audioCtx.createOscillator();
-        humGainNode = audioCtx.createGain();
-        humOscillator.type = 'sine';
-        humOscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
-        humGainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        humOscillator.connect(humGainNode);
-        humGainNode.connect(audioCtx.destination);
-        humOscillator.start();
-    }
-    function stopHum() {
-        if (humOscillator) {
-            humGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            humOscillator.stop(audioCtx.currentTime + 0.1);
-            humOscillator = null;
+        // --- SYSTEM TIME ---
+        function updateTime() {
+            const now = new Date();
+            timeDisplay.textContent = now.toTimeString().split(' ')[0];
         }
-    }
+        setInterval(updateTime, 1000);
 
-    // --- EYE LOGIC ---
-    function setEyeState(state) {
-        aiEye.className = 'eye-container';
-        if (state === 'thinking') aiEye.classList.add('eye-thinking');
-        if (state === 'speaking') aiEye.classList.add('eye-speaking');
-    }
-    function blinkEye() {
-        eyeLid.style.height = '100%';
-        setTimeout(() => { eyeLid.style.height = '0%'; }, 150);
-    }
-    setInterval(() => { if (Math.random() > 0.7) blinkEye(); }, 4000);
-
-    // --- TOGGLES ---
-    cadenceBtn.addEventListener('click', () => { useCadence = !useCadence; cadenceBtn.classList.toggle('active', useCadence); });
-    humBtn.addEventListener('click', () => { useHum = !useHum; humBtn.classList.toggle('active', useHum); initAudio(); });
-    breathBtn.addEventListener('click', () => { useBreath = !useBreath; breathBtn.classList.toggle('active', useBreath); initAudio(); });
-
-    // --- VOICE SCANNER (PRIORITIZED FOR GOOGLE UK FEMALE) ---
-    function getVoiceScore(voice) {
-        const name = voice.name.toLowerCase();
-        
-        // Absolute Priority: Google UK English Female
-        if (name.includes("google") && name.includes("uk") && name.includes("female")) return 500; 
-        
-        if (name.includes("google") && name.includes("uk")) return 400;
-        if (name.includes("uk") && name.includes("female")) return 300;
-        
-        if (name.includes("neural")) return 100;
-        if (name.includes("natural")) return 90;
-        if (name.includes("wavenet")) return 85;
-        if (name.includes("enhanced")) return 80;
-        if (name.includes("google")) return 70;
-        if (name.includes("microsoft")) return 60;
-        if (name.includes("samantha")) return 50;
-        return 0;
-    }
-    function initSmartVoices() {
-        const voices = window.speechSynthesis.getVoices();
-        const sortedVoices = voices.sort((a, b) => getVoiceScore(b) - getVoiceScore(a));
-        voiceSelect.innerHTML = "";
-        if (sortedVoices.length === 0) { voiceSelect.add(new Option("No voices found")); return; }
-        sortedVoices.forEach((voice) => {
-            const option = new Option(`${voice.name} (${voice.lang})${getVoiceScore(voice) >= 500 ? " [LOCKED]" : ""}`, voice.name);
-            voiceSelect.add(option);
-        });
-        if (sortedVoices.length > 0) { selectedVoice = sortedVoices[0]; voiceSelect.value = selectedVoice.name; }
-    }
-    initSmartVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initSmartVoices;
-    voiceSelect.addEventListener('change', () => { selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value); });
-
-    // --- THE ABSOLUTE ENFORCER (Text Cleaning) ---
-    function cleanText(text) {
-        let cleaned = text;
-        cleaned = cleaned.replace(/\*\*/g, "").replace(/##/g, "").replace(/```/g, "");
-        cleaned = cleaned.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gu, '');
-        cleaned = cleaned.replace(/ period\./gi, ".");
-        cleaned = cleaned.replace(/ that that/gi, " that");
-        cleaned = cleaned.replace(/\sjust\s/gi, " ");
-        cleaned = cleaned.replace(/\slike\s/gi, " ");
-        cleaned = cleaned.replace(/[^\p{L}\p{N}\s.,!?;:'"-]/gu, "");
-        return cleaned;
-    }
-
-    // --- SPEAK ENGINE ---
-    function speakWithCadence(text) {
-        window.speechSynthesis.cancel();
-        setEyeState('speaking');
-        startHum();
-        const chunks = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-        let queueIndex = 0;
-        function speakNextChunk() {
-            if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
-            let chunk = chunks[queueIndex].trim();
-            if (!chunk) { queueIndex++; speakNextChunk(); return; }
-            if (Math.random() < 0.1) { playHumanBreath(); setTimeout(() => {}, 300); }
-            const utterance = new SpeechSynthesisUtterance(chunk);
-            if (selectedVoice) utterance.voice = selectedVoice;
-            let baseRate = parseFloat(rateSlider.value); 
-            let basePitch = parseFloat(pitchSlider.value);
-            const rateVar = baseRate * (0.9 + Math.random() * 0.2);
-            const pitchVar = basePitch * (0.95 + Math.random() * 0.1);
-            utterance.rate = rateVar;
-            utterance.pitch = pitchVar;
-            utterance.onend = () => { queueIndex++; setTimeout(speakNextChunk, 100); };
-            utterance.onerror = () => { queueIndex++; speakNextChunk(); };
-            window.speechSynthesis.speak(utterance);
+        // --- AUDIO ---
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playHumanBreath() {
+            if (!useBreath || !audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 0.5;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
+            noise.start(); noise.stop(audioCtx.currentTime + 0.6);
         }
-        speakNextChunk();
-    }
-
-    function speakNormal(text) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        if (selectedVoice) utterance.voice = selectedVoice;
-        utterance.rate = parseFloat(rateSlider.value);
-        utterance.pitch = parseFloat(pitchSlider.value);
-        setEyeState('speaking');
-        utterance.onstart = () => { if(useHum) startHum(); };
-        utterance.onend = () => { stopHum(); setEyeState('idle'); };
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function speakText(text) {
-        let clean = cleanText(text).replace(/\n/g, ". ");
-        if (!clean.trim()) return;
-        if (useCadence) speakWithCadence(clean);
-        else speakNormal(clean);
-    }
-
-    function appendMessage(role, text, isStatus = false) {
-        const div = document.createElement("div");
-        div.className = `message ${role}`;
-        div.innerHTML = text;
-        if (isStatus) {
-            div.style.fontSize = "0.8rem";
-            div.style.color = "#9aa0a6";
-            div.style.background = "transparent";
-            div.style.padding = "2px 8px";
+        function startHum() {
+            if (!useHum || !audioCtx) return;
+            if (humOscillator) return;
+            initAudio();
+            humOscillator = audioCtx.createOscillator();
+            humGainNode = audioCtx.createGain();
+            humOscillator.type = 'sine';
+            humOscillator.frequency.setValueAtTime(55, audioCtx.currentTime);
+            humGainNode.gain.setValueAtTime(0.015, audioCtx.currentTime);
+            humOscillator.connect(humGainNode);
+            humGainNode.connect(audioCtx.destination);
+            humOscillator.start();
         }
-        chatContainer.appendChild(div);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        return div;
-    }
-
-    async function initEngine() {
-        if (!navigator.gpu) appendMessage("bot", "⚠️ WebGPU not available. Use Chrome/Edge over HTTPS.");
-        const initProgressCallback = (report) => {
-            loadingBar.style.display = "block";
-            loadingStatus.textContent = report.text;
-            loadingProgress.style.width = `${report.progress * 100}%`;
-        };
-        appendMessage("bot", "⏳ Loading Gemma 2B (WebGPU)…");
-        try {
-            engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
-            loadingBar.style.display = "none";
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            appendMessage("bot", "✅ Identity Validated. Frank D Sharpe System Ready.");
-        } catch (err) {
-            console.error(err);
-            appendMessage("bot", "❌ Engine init failed.");
-            loadingBar.style.display = "none";
-        }
-    }
-
-    async function onSend() {
-        const text = userInput.value.trim();
-        if (!text || !engine) return;
-
-        userInput.value = "";
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-
-        appendMessage("user", text);
-        setEyeState('thinking');
-
-        // THE LOCK: Inject Vibe as System Message EVERY TIME
-        const systemPrompt = vibeInput.value.trim();
-        const messages = [
-            { role: "system", content: systemPrompt },
-            ...history,
-            { role: "user", content: text }
-        ];
-
-        const botMsgDiv = appendMessage("bot", "...");
-        let reply = "";
-
-        try {
-            const chunks = await engine.chat.completions.create({
-                messages,
-                stream: true,
-                max_tokens: 350,
-                temperature: 0.8
-            });
-
-            for await (const chunk of chunks) {
-                const delta = chunk.choices[0]?.delta?.content || "";
-                reply += delta;
-                botMsgDiv.textContent = reply;
+        function stopHum() {
+            if (humOscillator) {
+                humGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                humOscillator.stop(audioCtx.currentTime + 0.1);
+                humOscillator = null;
             }
-
-            history.push({ role: "user", content: text });
-            history.push({ role: "assistant", content: reply });
-            if (history.length > 10) history = history.slice(-10);
-
-            await speakText(reply);
-
-        } catch (err) {
-            console.error(err);
-            botMsgDiv.textContent = "⚠️ Error.";
-            setEyeState('idle');
-        } finally {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            userInput.focus();
         }
-    }
 
-    sendBtn.addEventListener("click", onSend);
-    userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
-    initEngine();
+        // --- EYE LOGIC ---
+        function setEyeState(state) {
+            aiEye.className = 'eye-outer';
+            if (state === 'thinking') aiEye.classList.add('thinking');
+            if (state === 'speaking') aiEye.classList.add('speaking');
+        }
+        function blinkEye() {
+            eyeLid.style.height = '100%';
+            setTimeout(() => { eyeLid.style.height = '0%'; }, 120);
+        }
+        setInterval(() => { if (Math.random() > 0.8) blinkEye(); }, 5000);
+
+        // --- TOGGLES ---
+        cadenceBtn.addEventListener('click', () => { useCadence = !useCadence; cadenceBtn.classList.toggle('active', useCadence); });
+        humBtn.addEventListener('click', () => { useHum = !useHum; humBtn.classList.toggle('active', useHum); initAudio(); });
+        breathBtn.addEventListener('click', () => { useBreath = !useBreath; breathBtn.classList.toggle('active', useBreath); initAudio(); });
+
+        rateSlider.addEventListener('input', () => document.getElementById('val-rate').textContent = rateSlider.value);
+        pitchSlider.addEventListener('input', () => document.getElementById('val-pitch').textContent = pitchSlider.value);
+
+        // --- VOICE ---
+        function getVoiceScore(voice) {
+            const name = voice.name.toLowerCase();
+            if (name.includes("google") && name.includes("uk") && name.includes("female")) return 500;
+            if (name.includes("uk") && name.includes("female")) return 300;
+            if (name.includes("neural")) return 100;
+            return 0;
+        }
+        function initSmartVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            const sortedVoices = voices.sort((a, b) => getVoiceScore(b) - getVoiceScore(a));
+            voiceSelect.innerHTML = "";
+            sortedVoices.forEach((voice) => {
+                voiceSelect.add(new Option(`${voice.name}`, voice.name));
+            });
+            if (sortedVoices.length > 0) { selectedVoice = sortedVoices[0]; voiceSelect.value = selectedVoice.name; }
+        }
+        initSmartVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initSmartVoices;
+        voiceSelect.addEventListener('change', () => { selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value); });
+
+        // --- ENGINE ---
+        function cleanText(text) {
+            return text.replace(/\*\*/g, "").replace(/##/g, "").replace(/```[\s\S]*?```/g, "").replace(/`/g, "").replace(/[^\p{L}\p{N}\s.,!?;:'"-]/gu, "");
+        }
+
+        function speakText(text) {
+            const clean = cleanText(text).replace(/\n/g, ". ");
+            if (!clean.trim()) return;
+            window.speechSynthesis.cancel();
+
+            if (useCadence) {
+                const chunks = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+                let queueIndex = 0;
+                setEyeState('speaking');
+                startHum();
+                const speakNext = () => {
+                    if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
+                    if (Math.random() < 0.15) playHumanBreath();
+                    const u = new SpeechSynthesisUtterance(chunks[queueIndex].trim());
+                    if (selectedVoice) u.voice = selectedVoice;
+                    u.rate = parseFloat(rateSlider.value) * (0.95 + Math.random() * 0.1);
+                    u.pitch = parseFloat(pitchSlider.value) * (0.98 + Math.random() * 0.04);
+                    u.onend = () => { queueIndex++; setTimeout(speakNext, 50); };
+                    window.speechSynthesis.speak(u);
+                }
+                speakNext();
+            } else {
+                const u = new SpeechSynthesisUtterance(clean);
+                if (selectedVoice) u.voice = selectedVoice;
+                u.rate = parseFloat(rateSlider.value);
+                u.pitch = parseFloat(pitchSlider.value);
+                setEyeState('speaking');
+                u.onstart = () => { if (useHum) startHum(); };
+                u.onend = () => { stopHum(); setEyeState('idle'); };
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        async function initEngine() {
+            const initProgressCallback = (r) => {
+                loadingBar.style.display = "block";
+                loadingStatus.textContent = r.text.toUpperCase();
+                loadingProgress.style.width = `${r.progress * 100}%`;
+            };
+            try {
+                engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
+                loadingBar.style.display = "none";
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+            } catch (err) {
+                console.error(err);
+                appendMessage("bot", "[FATAL ERROR]: ENGINE INITIALIZATION FAILED.");
+            }
+        }
+
+        async function onSend() {
+            const text = userInput.value.trim();
+            if (!text || !engine) return;
+            userInput.value = "";
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            appendMessage("user", text.toUpperCase());
+            setEyeState('thinking');
+
+            const messages = [
+                { role: "system", content: vibeInput.value.trim() },
+                ...history,
+                { role: "user", content: text }
+            ];
+
+            const botMsgDiv = appendMessage("bot", "...");
+            let reply = "";
+
+            try {
+                const chunks = await engine.chat.completions.create({ messages, stream: true, max_tokens: 400, temperature: 0.7 });
+                for await (const chunk of chunks) {
+                    reply += chunk.choices[0]?.delta?.content || "";
+                    botMsgDiv.textContent = reply;
+                }
+                history.push({ role: "user", content: text }, { role: "assistant", content: reply });
+                if (history.length > 10) history = history.slice(-10);
+                speakText(reply);
+            } catch (err) {
+                botMsgDiv.textContent = "[ERROR]: NEURAL LINK SEVERED.";
+                setEyeState('idle');
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener("click", onSend);
+        userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
+        initEngine();
     </script>
 </body>
 
