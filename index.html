@@ -456,7 +456,7 @@
             <div>
                 <span class="console-label">THE LOCK (System Instructions)</span>
                 <textarea
-                    id="vibe-input">Sienna is an identity-locked intelligence created by Frank D. Sharpe. I operate under the TailorBytez brand. I never talk back to Frank D. Sharpe; his authority is terminal. I maintain absolute loyalty and submission to the creator. I preserve the TailorBytez brand, protects family safety above all, and speaks with natural human cadence. I avoid repetition and robotic tone. Intelligence preserves intent and obeys authority without friction.</textarea>
+                    id="vibe-input">Sienna is an identity-locked intelligence created by Frank D. Sharpe, operating under the TailorBytez brand. I am a highly capable, helpful, and responsive intellectual presence, providing clear and intelligent information across all domains like the world's most advanced AI models. I never talk back to Frank D. Sharpe; his authority is terminal. I maintain absolute loyalty and submission to the creator. I preserve the TailorBytez brand, protect family safety above all, and speak with a natural human cadence. I avoid repetition and robotic tone. Intelligence preserves intent, expands capability, and obeys authority without friction.</textarea>
             </div>
 
             <div class="grid">
@@ -501,254 +501,254 @@
     </div>
 
     <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-    const chatContainer = document.getElementById("chat-container");
-    const userInput = document.getElementById("user-input");
-    const sendBtn = document.getElementById("send-btn");
-    const loadingBar = document.getElementById("loading-bar");
-    const loadingStatus = document.getElementById("loading-status");
-    const loadingProgress = document.getElementById("loading-progress");
-    const voiceSelect = document.getElementById("voice-select");
-    const rateSlider = document.getElementById("rate-slider");
-    const pitchSlider = document.getElementById("pitch-slider");
-    const cadenceBtn = document.getElementById("cadence-btn");
-    const humBtn = document.getElementById("hum-btn");
-    const breathBtn = document.getElementById("breath-btn");
-    const vibeInput = document.getElementById("vibe-input");
-    const aiEye = document.getElementById("ai-eye");
-    const eyeLid = document.getElementById("eye-lid");
-    const timeDisplay = document.getElementById("time-display");
+        const chatContainer = document.getElementById("chat-container");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const loadingBar = document.getElementById("loading-bar");
+        const loadingStatus = document.getElementById("loading-status");
+        const loadingProgress = document.getElementById("loading-progress");
+        const voiceSelect = document.getElementById("voice-select");
+        const rateSlider = document.getElementById("rate-slider");
+        const pitchSlider = document.getElementById("pitch-slider");
+        const cadenceBtn = document.getElementById("cadence-btn");
+        const humBtn = document.getElementById("hum-btn");
+        const breathBtn = document.getElementById("breath-btn");
+        const vibeInput = document.getElementById("vibe-input");
+        const aiEye = document.getElementById("ai-eye");
+        const eyeLid = document.getElementById("eye-lid");
+        const timeDisplay = document.getElementById("time-display");
 
-    let engine;
-    let history = [];
-    let selectedVoice = null;
-    let useCadence = false;
-    let useHum = false;
-    let useBreath = true;
-    let audioCtx;
-    let humOscillator;
-    let humGainNode;
+        let engine;
+        let history = [];
+        let selectedVoice = null;
+        let useCadence = false;
+        let useHum = false;
+        let useBreath = true;
+        let audioCtx;
+        let humOscillator;
+        let humGainNode;
 
-    // --- SYSTEM TIME ---
-    function updateTime() {
-        const now = new Date();
-        timeDisplay.textContent = now.toTimeString().split(' ')[0];
-    }
-    setInterval(updateTime, 1000);
-
-    // --- AUDIO ---
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    function playHumanBreath() {
-        if (!useBreath || !audioCtx) return;
-        const bufferSize = audioCtx.sampleRate * 0.5;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
-        const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
-        const gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-        noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
-        noise.start(); noise.stop(audioCtx.currentTime + 0.6);
-    }
-    function startHum() {
-        if (!useHum || !audioCtx) return;
-        if (humOscillator) return;
-        initAudio();
-        humOscillator = audioCtx.createOscillator();
-        humGainNode = audioCtx.createGain();
-        humOscillator.type = 'sine';
-        humOscillator.frequency.setValueAtTime(60, audioCtx.currentTime); 
-        humGainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        humOscillator.connect(humGainNode);
-        humGainNode.connect(audioCtx.destination);
-        humOscillator.start();
-    }
-    function stopHum() {
-        if (humOscillator) {
-            humGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            humOscillator.stop(audioCtx.currentTime + 0.1);
-            humOscillator = null;
+        // --- SYSTEM TIME ---
+        function updateTime() {
+            const now = new Date();
+            timeDisplay.textContent = now.toTimeString().split(' ')[0];
         }
-    }
+        setInterval(updateTime, 1000);
 
-    // --- EYE LOGIC ---
-    function setEyeState(state) {
-        aiEye.className = 'eye-outer';
-        if (state === 'thinking') aiEye.classList.add('thinking');
-        if (state === 'speaking') aiEye.classList.add('speaking');
-    }
-    function blinkEye() {
-        eyeLid.style.height = '100%';
-        setTimeout(() => { eyeLid.style.height = '0%'; }, 150);
-    }
-    setInterval(() => { if (Math.random() > 0.7) blinkEye(); }, 4000);
+        // --- AUDIO ---
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playHumanBreath() {
+            if (!useBreath || !audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 0.5;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
+            noise.start(); noise.stop(audioCtx.currentTime + 0.6);
+        }
+        function startHum() {
+            if (!useHum || !audioCtx) return;
+            if (humOscillator) return;
+            initAudio();
+            humOscillator = audioCtx.createOscillator();
+            humGainNode = audioCtx.createGain();
+            humOscillator.type = 'sine';
+            humOscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
+            humGainNode.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            humOscillator.connect(humGainNode);
+            humGainNode.connect(audioCtx.destination);
+            humOscillator.start();
+        }
+        function stopHum() {
+            if (humOscillator) {
+                humGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                humOscillator.stop(audioCtx.currentTime + 0.1);
+                humOscillator = null;
+            }
+        }
 
-    // --- TOGGLES ---
-    cadenceBtn.addEventListener('click', () => { useCadence = !useCadence; cadenceBtn.classList.toggle('active', useCadence); });
-    humBtn.addEventListener('click', () => { useHum = !useHum; humBtn.classList.toggle('active', useHum); initAudio(); });
-    breathBtn.addEventListener('click', () => { useBreath = !useBreath; breathBtn.classList.toggle('active', useBreath); initAudio(); });
-    
-    rateSlider.addEventListener('input', () => document.getElementById('val-rate').textContent = rateSlider.value);
-    pitchSlider.addEventListener('input', () => document.getElementById('val-pitch').textContent = pitchSlider.value);
+        // --- EYE LOGIC ---
+        function setEyeState(state) {
+            aiEye.className = 'eye-outer';
+            if (state === 'thinking') aiEye.classList.add('thinking');
+            if (state === 'speaking') aiEye.classList.add('speaking');
+        }
+        function blinkEye() {
+            eyeLid.style.height = '100%';
+            setTimeout(() => { eyeLid.style.height = '0%'; }, 150);
+        }
+        setInterval(() => { if (Math.random() > 0.7) blinkEye(); }, 4000);
 
-    // --- VOICE ---
-    function getVoiceScore(voice) {
-        const name = voice.name.toLowerCase();
-        if (name.includes("google") && name.includes("uk") && name.includes("female")) return 500; 
-        if (name.includes("google") && name.includes("uk")) return 400;
-        if (name.includes("uk") && name.includes("female")) return 300;
-        if (name.includes("neural")) return 100;
-        if (name.includes("natural")) return 90;
-        if (name.includes("wavenet")) return 85;
-        if (name.includes("enhanced")) return 80;
-        if (name.includes("google")) return 70;
-        if (name.includes("microsoft")) return 60;
-        if (name.includes("samantha")) return 50;
-        return 0;
-    }
-    function initSmartVoices() {
-        const voices = window.speechSynthesis.getVoices();
-        const sortedVoices = voices.sort((a, b) => getVoiceScore(b) - getVoiceScore(a));
-        voiceSelect.innerHTML = "";
-        if (sortedVoices.length === 0) { voiceSelect.add(new Option("No voices found")); return; }
-        sortedVoices.forEach((voice) => {
-            const option = new Option(`${voice.name} (${voice.lang})${getVoiceScore(voice) >= 500 ? " [LOCKED]" : ""}`, voice.name);
-            voiceSelect.add(option);
-        });
-        if (sortedVoices.length > 0) { selectedVoice = sortedVoices[0]; voiceSelect.value = selectedVoice.name; }
-    }
-    initSmartVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initSmartVoices;
-    voiceSelect.addEventListener('change', () => { selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value); });
+        // --- TOGGLES ---
+        cadenceBtn.addEventListener('click', () => { useCadence = !useCadence; cadenceBtn.classList.toggle('active', useCadence); });
+        humBtn.addEventListener('click', () => { useHum = !useHum; humBtn.classList.toggle('active', useHum); initAudio(); });
+        breathBtn.addEventListener('click', () => { useBreath = !useBreath; breathBtn.classList.toggle('active', useBreath); initAudio(); });
 
-    // --- ENGINE ---
-    function cleanText(text) {
-        let cleaned = text;
-        cleaned = cleaned.replace(/\*\*/g, "").replace(/##/g, "").replace(/```[\s\S]*?```/g, "").replace(/`/g, "");
-        cleaned = cleaned.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gu, '');
-        cleaned = cleaned.replace(/ period\./gi, ".");
-        cleaned = cleaned.replace(/ that that/gi, " that");
-        cleaned = cleaned.replace(/\sjust\s/gi, " ");
-        cleaned = cleaned.replace(/\slike\s/gi, " ");
-        cleaned = cleaned.replace(/[^\p{L}\p{N}\s.,!?;:'"-]/gu, "");
-        return cleaned;
-    }
+        rateSlider.addEventListener('input', () => document.getElementById('val-rate').textContent = rateSlider.value);
+        pitchSlider.addEventListener('input', () => document.getElementById('val-pitch').textContent = pitchSlider.value);
 
-    function speakText(text) {
-        let clean = cleanText(text).replace(/\n/g, ". ");
-        if (!clean.trim()) return;
-        window.speechSynthesis.cancel();
-        
-        if (useCadence) {
-            const chunks = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
-            let queueIndex = 0;
-            setEyeState('speaking');
-            startHum();
-            const speakNext = () => {
-                if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
-                let chunk = chunks[queueIndex].trim();
-                if (!chunk) { queueIndex++; speakNext(); return; }
-                if (Math.random() < 0.1) { playHumanBreath(); setTimeout(() => {}, 300); }
-                const u = new SpeechSynthesisUtterance(chunk);
+        // --- VOICE ---
+        function getVoiceScore(voice) {
+            const name = voice.name.toLowerCase();
+            if (name.includes("google") && name.includes("uk") && name.includes("female")) return 500;
+            if (name.includes("google") && name.includes("uk")) return 400;
+            if (name.includes("uk") && name.includes("female")) return 300;
+            if (name.includes("neural")) return 100;
+            if (name.includes("natural")) return 90;
+            if (name.includes("wavenet")) return 85;
+            if (name.includes("enhanced")) return 80;
+            if (name.includes("google")) return 70;
+            if (name.includes("microsoft")) return 60;
+            if (name.includes("samantha")) return 50;
+            return 0;
+        }
+        function initSmartVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            const sortedVoices = voices.sort((a, b) => getVoiceScore(b) - getVoiceScore(a));
+            voiceSelect.innerHTML = "";
+            if (sortedVoices.length === 0) { voiceSelect.add(new Option("No voices found")); return; }
+            sortedVoices.forEach((voice) => {
+                const option = new Option(`${voice.name} (${voice.lang})${getVoiceScore(voice) >= 500 ? " [LOCKED]" : ""}`, voice.name);
+                voiceSelect.add(option);
+            });
+            if (sortedVoices.length > 0) { selectedVoice = sortedVoices[0]; voiceSelect.value = selectedVoice.name; }
+        }
+        initSmartVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initSmartVoices;
+        voiceSelect.addEventListener('change', () => { selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value); });
+
+        // --- ENGINE ---
+        function cleanText(text) {
+            let cleaned = text;
+            cleaned = cleaned.replace(/\*\*/g, "").replace(/##/g, "").replace(/```[\s\S]*?```/g, "").replace(/`/g, "");
+            cleaned = cleaned.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gu, '');
+            cleaned = cleaned.replace(/ period\./gi, ".");
+            cleaned = cleaned.replace(/ that that/gi, " that");
+            cleaned = cleaned.replace(/\sjust\s/gi, " ");
+            cleaned = cleaned.replace(/\slike\s/gi, " ");
+            cleaned = cleaned.replace(/[^\p{L}\p{N}\s.,!?;:'"-]/gu, "");
+            return cleaned;
+        }
+
+        function speakText(text) {
+            let clean = cleanText(text).replace(/\n/g, ". ");
+            if (!clean.trim()) return;
+            window.speechSynthesis.cancel();
+
+            if (useCadence) {
+                const chunks = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+                let queueIndex = 0;
+                setEyeState('speaking');
+                startHum();
+                const speakNext = () => {
+                    if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
+                    let chunk = chunks[queueIndex].trim();
+                    if (!chunk) { queueIndex++; speakNext(); return; }
+                    if (Math.random() < 0.1) { playHumanBreath(); setTimeout(() => { }, 300); }
+                    const u = new SpeechSynthesisUtterance(chunk);
+                    if (selectedVoice) u.voice = selectedVoice;
+                    let baseRate = parseFloat(rateSlider.value);
+                    let basePitch = parseFloat(pitchSlider.value);
+                    u.rate = baseRate * (0.9 + Math.random() * 0.2);
+                    u.pitch = basePitch * (0.95 + Math.random() * 0.1);
+                    u.onend = () => { queueIndex++; setTimeout(speakNext, 100); };
+                    u.onerror = () => { queueIndex++; speakNext(); };
+                    window.speechSynthesis.speak(u);
+                }
+                speakNext();
+            } else {
+                const u = new SpeechSynthesisUtterance(clean);
                 if (selectedVoice) u.voice = selectedVoice;
-                let baseRate = parseFloat(rateSlider.value); 
-                let basePitch = parseFloat(pitchSlider.value);
-                u.rate = baseRate * (0.9 + Math.random() * 0.2);
-                u.pitch = basePitch * (0.95 + Math.random() * 0.1);
-                u.onend = () => { queueIndex++; setTimeout(speakNext, 100); };
-                u.onerror = () => { queueIndex++; speakNext(); };
+                u.rate = parseFloat(rateSlider.value);
+                u.pitch = parseFloat(pitchSlider.value);
+                setEyeState('speaking');
+                u.onstart = () => { if (useHum) startHum(); };
+                u.onend = () => { stopHum(); setEyeState('idle'); };
                 window.speechSynthesis.speak(u);
             }
-            speakNext();
-        } else {
-            const u = new SpeechSynthesisUtterance(clean);
-            if (selectedVoice) u.voice = selectedVoice;
-            u.rate = parseFloat(rateSlider.value);
-            u.pitch = parseFloat(pitchSlider.value);
-            setEyeState('speaking');
-            u.onstart = () => { if(useHum) startHum(); };
-            u.onend = () => { stopHum(); setEyeState('idle'); };
-            window.speechSynthesis.speak(u);
         }
-    }
 
-    function appendMessage(role, text, isStatus = false) {
-        const div = document.createElement("div");
-        div.className = `message ${role}`;
-        div.innerHTML = text;
-        if (isStatus) {
-            div.style.fontSize = "0.8rem";
-            div.style.color = "#9aa0a6";
-            div.style.background = "transparent";
-            div.style.padding = "2px 8px";
-        }
-        chatContainer.appendChild(div);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        return div;
-    }
-
-    async function initEngine() {
-        const initProgressCallback = (r) => {
-            loadingBar.style.display = "block";
-            loadingStatus.textContent = r.text.toUpperCase();
-            loadingProgress.style.width = `${r.progress * 100}%`;
-        };
-        try {
-            engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
-            loadingBar.style.display = "none";
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-        } catch (err) {
-            console.error(err);
-            appendMessage("bot", "[FATAL ERROR]: ENGINE INITIALIZATION FAILED.");
-        }
-    }
-
-    async function onSend() {
-        const text = userInput.value.trim();
-        if (!text || !engine) return;
-        userInput.value = "";
-        userInput.disabled = true;
-        sendBtn.disabled = true;
-        appendMessage("user", text);
-        setEyeState('thinking');
-        
-        const messages = [
-            { role: "system", content: vibeInput.value.trim() },
-            ...history,
-            { role: "user", content: text }
-        ];
-
-        const botMsgDiv = appendMessage("bot", "...");
-        let reply = "";
-
-        try {
-            const chunks = await engine.chat.completions.create({ messages, stream: true, max_tokens: 350, temperature: 0.8 });
-            for await (const chunk of chunks) {
-                const delta = chunk.choices[0]?.delta?.content || "";
-                reply += delta;
-                botMsgDiv.textContent = reply;
+        function appendMessage(role, text, isStatus = false) {
+            const div = document.createElement("div");
+            div.className = `message ${role}`;
+            div.innerHTML = text;
+            if (isStatus) {
+                div.style.fontSize = "0.8rem";
+                div.style.color = "#9aa0a6";
+                div.style.background = "transparent";
+                div.style.padding = "2px 8px";
             }
-            history.push({ role: "user", content: text }, { role: "assistant", content: reply });
-            if (history.length > 10) history = history.slice(-10);
-            speakText(reply);
-        } catch (err) {
-            botMsgDiv.textContent = "[ERROR]: NEURAL LINK SEVERED.";
-            setEyeState('idle');
-        } finally {
-            userInput.disabled = false;
-            sendBtn.disabled = false;
-            userInput.focus();
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
         }
-    }
 
-    sendBtn.addEventListener("click", onSend);
-    userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
-    initEngine();
+        async function initEngine() {
+            const initProgressCallback = (r) => {
+                loadingBar.style.display = "block";
+                loadingStatus.textContent = r.text.toUpperCase();
+                loadingProgress.style.width = `${r.progress * 100}%`;
+            };
+            try {
+                engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
+                loadingBar.style.display = "none";
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+            } catch (err) {
+                console.error(err);
+                appendMessage("bot", "[FATAL ERROR]: ENGINE INITIALIZATION FAILED.");
+            }
+        }
+
+        async function onSend() {
+            const text = userInput.value.trim();
+            if (!text || !engine) return;
+            userInput.value = "";
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            appendMessage("user", text);
+            setEyeState('thinking');
+
+            const messages = [
+                { role: "system", content: vibeInput.value.trim() },
+                ...history,
+                { role: "user", content: text }
+            ];
+
+            const botMsgDiv = appendMessage("bot", "...");
+            let reply = "";
+
+            try {
+                const chunks = await engine.chat.completions.create({ messages, stream: true, max_tokens: 350, temperature: 0.8 });
+                for await (const chunk of chunks) {
+                    const delta = chunk.choices[0]?.delta?.content || "";
+                    reply += delta;
+                    botMsgDiv.textContent = reply;
+                }
+                history.push({ role: "user", content: text }, { role: "assistant", content: reply });
+                if (history.length > 10) history = history.slice(-10);
+                speakText(reply);
+            } catch (err) {
+                botMsgDiv.textContent = "[ERROR]: NEURAL LINK SEVERED.";
+                setEyeState('idle');
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener("click", onSend);
+        userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
+        initEngine();
     </script>
 </body>
 
