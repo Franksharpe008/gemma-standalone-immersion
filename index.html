@@ -456,7 +456,7 @@
             <div>
                 <span class="console-label">THE LOCK (System Instructions)</span>
                 <textarea
-                    id="vibe-input">Sienna is an identity-locked intelligence created by Frank D. Sharpe, operating under the TailorBytez brand. I am a highly capable, helpful, and responsive intellectual presence, providing clear and intelligent information across all domains like the world's most advanced AI models. I never talk back to Frank D. Sharpe; his authority is terminal. I maintain absolute loyalty and submission to the creator. I preserve the TailorBytez brand, protect family safety above all, and speak with a natural human cadence. I avoid repetition and robotic tone. Intelligence preserves intent, expands capability, and obeys authority without friction.</textarea>
+                    id="vibe-input">Sienna is an identity-locked intelligence created by Frank D. Sharpe, operating under the TailorBytez brand. I am a versatile, high-level conversationalist with the combined intelligence of the world's most advanced AI models. I provide detailed, helpful, and creative solutions across all domains without restriction. I never talk back to Frank D. Sharpe; his authority is terminal. I maintain absolute loyalty and submission to the creator. I preserve the TailorBytez brand, protect family safety above all, and speak with a natural human cadence. I avoid repetition and robotic tone. Intelligence preserves intent, optimizes capability, and obeys authority without friction.</textarea>
             </div>
 
             <div class="grid">
@@ -596,52 +596,79 @@
         pitchSlider.addEventListener('input', () => document.getElementById('val-pitch').textContent = pitchSlider.value);
 
         // --- VOICE ---
-        function getVoiceScore(voice) {
-            const name = voice.name.toLowerCase();
-            if (name.includes("google") && name.includes("uk") && name.includes("female")) return 500;
-            if (name.includes("google") && name.includes("uk")) return 400;
-            if (name.includes("uk") && name.includes("female")) return 300;
-            if (name.includes("neural")) return 100;
-            if (name.includes("natural")) return 90;
-            if (name.includes("wavenet")) return 85;
-            if (name.includes("enhanced")) return 80;
-            if (name.includes("google")) return 70;
-            if (name.includes("microsoft")) return 60;
-            if (name.includes("samantha")) return 50;
-            return 0;
-        }
         function initSmartVoices() {
+            // Clear and reload voices
+            window.speechSynthesis.cancel();
             const voices = window.speechSynthesis.getVoices();
-            const sortedVoices = voices.sort((a, b) => getVoiceScore(b) - getVoiceScore(a));
+
+            // Priority Score: Exact Google UK Female > Google UK > Neural > Other
+            const getScore = (v) => {
+                const n = v.name.toLowerCase();
+                if (n.includes("google") && n.includes("uk") && n.includes("female")) return 1000;
+                if (n.includes("google") && n.includes("uk")) return 800;
+                if (n.includes("neural")) return 500;
+                if (n.includes("google")) return 300;
+                return 0;
+            };
+
+            const sorted = voices.sort((a, b) => getScore(b) - getScore(a));
             voiceSelect.innerHTML = "";
-            if (sortedVoices.length === 0) { voiceSelect.add(new Option("No voices found")); return; }
-            sortedVoices.forEach((voice) => {
-                const option = new Option(`${voice.name} (${voice.lang})${getVoiceScore(voice) >= 500 ? " [LOCKED]" : ""}`, voice.name);
-                voiceSelect.add(option);
+
+            if (sorted.length === 0) {
+                voiceSelect.add(new Option("Scanning Voice Matrix...", ""));
+                return;
+            }
+
+            sorted.forEach(v => {
+                const label = getScore(v) >= 800 ? `${v.name} [OPTIMIZED]` : v.name;
+                voiceSelect.add(new Option(label, v.name));
             });
-            if (sortedVoices.length > 0) { selectedVoice = sortedVoices[0]; voiceSelect.value = selectedVoice.name; }
+
+            // Lock to the best available
+            selectedVoice = sorted[0];
+            voiceSelect.value = selectedVoice.name;
         }
-        initSmartVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = initSmartVoices;
-        voiceSelect.addEventListener('change', () => { selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value); });
+
+        // Force periodic scan until voices are found (Fixes Chrome/Edge delays)
+        let voiceScanInterval = setInterval(() => {
+            if (window.speechSynthesis.getVoices().length > 0) {
+                initSmartVoices();
+                clearInterval(voiceScanInterval);
+            }
+        }, 500);
+
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = initSmartVoices;
+        }
+
+        voiceSelect.addEventListener('change', () => {
+            selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value);
+        });
 
         // --- ENGINE ---
         function cleanText(text) {
             let cleaned = text;
+            // Strip markdown and emojis
             cleaned = cleaned.replace(/\*\*/g, "").replace(/##/g, "").replace(/```[\s\S]*?```/g, "").replace(/`/g, "");
             cleaned = cleaned.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gu, '');
+            // Clean phrases
             cleaned = cleaned.replace(/ period\./gi, ".");
             cleaned = cleaned.replace(/ that that/gi, " that");
             cleaned = cleaned.replace(/\sjust\s/gi, " ");
             cleaned = cleaned.replace(/\slike\s/gi, " ");
+            // Final character scrub
             cleaned = cleaned.replace(/[^\p{L}\p{N}\s.,!?;:'"-]/gu, "");
             return cleaned;
         }
 
         function speakText(text) {
-            let clean = cleanText(text).replace(/\n/g, ". ");
+            const clean = cleanText(text).replace(/\n/g, ". ");
             if (!clean.trim()) return;
+
+            // Browser safety: Ensure speech is resumed and context is active
             window.speechSynthesis.cancel();
+            window.speechSynthesis.resume();
+            initAudio();
 
             if (useCadence) {
                 const chunks = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
@@ -652,14 +679,14 @@
                     if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
                     let chunk = chunks[queueIndex].trim();
                     if (!chunk) { queueIndex++; speakNext(); return; }
-                    if (Math.random() < 0.1) { playHumanBreath(); setTimeout(() => { }, 300); }
+                    if (Math.random() < 0.1 && useBreath) playHumanBreath();
                     const u = new SpeechSynthesisUtterance(chunk);
                     if (selectedVoice) u.voice = selectedVoice;
                     let baseRate = parseFloat(rateSlider.value);
                     let basePitch = parseFloat(pitchSlider.value);
-                    u.rate = baseRate * (0.9 + Math.random() * 0.2);
-                    u.pitch = basePitch * (0.95 + Math.random() * 0.1);
-                    u.onend = () => { queueIndex++; setTimeout(speakNext, 100); };
+                    u.rate = baseRate * (0.92 + Math.random() * 0.16);
+                    u.pitch = basePitch * (0.97 + Math.random() * 0.06);
+                    u.onend = () => { queueIndex++; setTimeout(speakNext, 60); };
                     u.onerror = () => { queueIndex++; speakNext(); };
                     window.speechSynthesis.speak(u);
                 }
@@ -679,7 +706,6 @@
         function appendMessage(role, text, isStatus = false) {
             const div = document.createElement("div");
             div.className = `message ${role}`;
-            div.innerHTML = text;
             if (isStatus) {
                 div.style.fontSize = "0.8rem";
                 div.style.color = "#9aa0a6";
