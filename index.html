@@ -422,9 +422,9 @@
 <body>
 
     <div id="loading-bar">
-        <div id="loading-status" role="status" aria-live="polite">LOCAL AI · LOAD WHEN READY</div>
-        <p>Runs on your device. A WebGPU browser and a large first-time model download are required.</p>
-        <button id="load-engine" class="send-btn" type="button">LOAD LOCAL MODEL</button>
+        <div id="loading-status" role="status" aria-live="polite">EDGE AI · STARTING ON THIS DEVICE</div>
+        <p>Runs on your device. WebGPU is required. The first download exceeds 1 GB; later starts reuse the browser cache.</p>
+        <button id="load-engine" class="send-btn" type="button">LOAD EDGE MODEL</button>
         <div id="loading-progress-container">
             <div id="loading-progress"></div>
         </div>
@@ -496,21 +496,21 @@
 
     <div id="chat-container">
         <div id="boot-message" class="message bot">
-            <b>[READY TO LOAD]</b>
+            <b>[EDGE MODEL STARTING]</b>
             <br><br>
-            Local model not loaded yet. Speech uses the voices available on your device.
+            The edge model starts automatically on supported devices. You can type while it loads.
             <br>
-            Choose Load Local Model to begin. No chat messages are sent to a hosted AI API.
+            Execute becomes available when the model is ready. No chat messages are sent to a hosted AI API.
         </div>
     </div>
 
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask anything..." disabled>
+        <input type="text" id="user-input" placeholder="Type while the edge model starts…">
         <button class="send-btn" id="send-btn" disabled>EXECUTE</button>
     </div>
 
     <script type="module">
-        // Load the inference library only after a deliberate model-load action.
+        // Start the same edge model automatically; inference stays on this device.
 
         const chatContainer = document.getElementById("chat-container");
         const userInput = document.getElementById("user-input");
@@ -530,6 +530,7 @@
         const timeDisplay = document.getElementById("time-display");
 
         let engine;
+        let initializing = false;
         let history = [];
         let selectedVoice = null;
         let useCadence = false;
@@ -728,13 +729,15 @@
         }
 
         async function initEngine() {
+            if (initializing || engine) return;
             const loadButton = document.getElementById("load-engine");
             if (!navigator.gpu) {
-                loadingStatus.textContent = "WebGPU is unavailable. Use a supported browser/device to load local AI.";
+                loadingStatus.textContent = "WebGPU is unavailable. Use a supported browser/device to run edge AI.";
                 return;
             }
+            initializing = true;
             loadButton.disabled = true;
-            loadButton.textContent = "LOADING MODEL...";
+            loadButton.textContent = "LOADING EDGE MODEL...";
             const initProgressCallback = (r) => {
                 loadingBar.style.display = "block";
                 loadingStatus.textContent = r.text.toUpperCase();
@@ -745,21 +748,25 @@
                 const webllm = await import("https://esm.run/@mlc-ai/web-llm@0.2.85");
                 engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
                 loadingBar.style.display = "none";
-                document.getElementById("boot-message").textContent = "LOCAL MODEL READY · Gemma is running on this device. Type a prompt to begin. Browser speech uses available device voices.";
+                document.getElementById("boot-message").textContent = "EDGE MODEL READY · Gemma is running on this device. Type a prompt to begin. Browser speech uses available device voices.";
                 userInput.disabled = false;
                 sendBtn.disabled = false;
+                userInput.placeholder = "Ask anything...";
             } catch (err) {
                 console.error(err);
                 loadingStatus.textContent = "Model could not load. Check WebGPU support, available memory and your connection, then retry.";
                 loadingBar.style.display = "block";
                 loadButton.disabled = false;
-                loadButton.textContent = "RETRY MODEL LOAD";
+                loadButton.textContent = "RETRY EDGE MODEL LOAD";
+            } finally {
+                initializing = false;
             }
         }
 
         async function onSend() {
             const text = userInput.value.trim();
-            if (!text || !engine) return;
+            if (!text) return;
+            if (!engine) { loadingStatus.textContent = "The edge model is not ready yet. Your typed prompt is kept until you press Execute."; return; }
             userInput.value = "";
             userInput.disabled = true;
             sendBtn.disabled = true;
@@ -798,6 +805,7 @@
         sendBtn.addEventListener("click", onSend);
         userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
         document.getElementById("load-engine").addEventListener("click", initEngine);
+        initEngine();
     </script>
 </body>
 
