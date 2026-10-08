@@ -386,7 +386,8 @@
         }
 
         #loading-bar {
-            position: fixed;
+            position: relative;
+            flex-shrink: 0;
             top: 0;
             left: 0;
             right: 0;
@@ -397,7 +398,7 @@
             color: var(--accent);
             border-bottom: 1px solid var(--accent);
             z-index: 100;
-            display: none;
+            display: block;
         }
 
         #loading-progress-container {
@@ -421,7 +422,9 @@
 <body>
 
     <div id="loading-bar">
-        <div id="loading-status">INITIALIZING SIENNA CORE...</div>
+        <div id="loading-status" role="status" aria-live="polite">LOCAL AI · LOAD WHEN READY</div>
+        <p>Runs on your device. A WebGPU browser and a large first-time model download are required.</p>
+        <button id="load-engine" class="send-btn" type="button">LOAD LOCAL MODEL</button>
         <div id="loading-progress-container">
             <div id="loading-progress"></div>
         </div>
@@ -492,12 +495,12 @@
     </header>
 
     <div id="chat-container">
-        <div class="message bot">
-            <b>[SYSTEM BOOT COMPLETE]</b>
+        <div id="boot-message" class="message bot">
+            <b>[READY TO LOAD]</b>
             <br><br>
-            Sienna Neural Link active. Audio synthesized via <b>Google UK English Female</b>.
+            Local model not loaded yet. Speech uses the voices available on your device.
             <br>
-            Enforcer Protocol Active. Ready for Intelligence expansion.
+            Choose Load Local Model to begin. No chat messages are sent to a hosted AI API.
         </div>
     </div>
 
@@ -507,7 +510,7 @@
     </div>
 
     <script type="module">
-        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+        // Load the inference library only after a deliberate model-load action.
 
         const chatContainer = document.getElementById("chat-container");
         const userInput = document.getElementById("user-input");
@@ -712,6 +715,7 @@
         function appendMessage(role, text, isStatus = false) {
             const div = document.createElement("div");
             div.className = `message ${role}`;
+            div.textContent = text;
             if (isStatus) {
                 div.style.fontSize = "0.8rem";
                 div.style.color = "#9aa0a6";
@@ -724,19 +728,32 @@
         }
 
         async function initEngine() {
+            const loadButton = document.getElementById("load-engine");
+            if (!navigator.gpu) {
+                loadingStatus.textContent = "WebGPU is unavailable. Use a supported browser/device to load local AI.";
+                return;
+            }
+            loadButton.disabled = true;
+            loadButton.textContent = "LOADING MODEL...";
             const initProgressCallback = (r) => {
                 loadingBar.style.display = "block";
                 loadingStatus.textContent = r.text.toUpperCase();
                 loadingProgress.style.width = `${r.progress * 100}%`;
             };
             try {
+                loadingStatus.textContent = "Loading inference library and model...";
+                const webllm = await import("https://esm.run/@mlc-ai/web-llm@0.2.85");
                 engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
                 loadingBar.style.display = "none";
+                document.getElementById("boot-message").textContent = "LOCAL MODEL READY · Gemma is running on this device. Type a prompt to begin. Browser speech uses available device voices.";
                 userInput.disabled = false;
                 sendBtn.disabled = false;
             } catch (err) {
                 console.error(err);
-                appendMessage("bot", "[FATAL ERROR]: ENGINE INITIALIZATION FAILED.");
+                loadingStatus.textContent = "Model could not load. Check WebGPU support, available memory and your connection, then retry.";
+                loadingBar.style.display = "block";
+                loadButton.disabled = false;
+                loadButton.textContent = "RETRY MODEL LOAD";
             }
         }
 
@@ -780,7 +797,7 @@
 
         sendBtn.addEventListener("click", onSend);
         userInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onSend(); });
-        initEngine();
+        document.getElementById("load-engine").addEventListener("click", initEngine);
     </script>
 </body>
 
