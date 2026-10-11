@@ -12,9 +12,9 @@ export function takeSpeechChunks(text, flush = false, limit = 140) {
       if (end <= limit) { cut = end; break; }
     }
     // Keep long spoken thoughts flowing by preparing a natural clause early.
-    if ((!cut || cut > 90) && rest.length >= 90) {
-      const clause = /[,;:]\s/.exec(rest.slice(0, Math.min(cut || limit, limit)));
-      if (clause && clause.index >= 35) cut = clause.index + 1;
+    if ((!cut || cut > 90) && rest.length >= 64) {
+      const clause = [...rest.slice(0, Math.min(cut || limit, limit)).matchAll(/[,;:]\s/g)].find(match => match.index >= 35);
+      if (clause) cut = clause.index + 1;
     }
     if (!cut && rest.length > limit) {
       // Prefer a clause boundary; otherwise use a whole-word boundary.

@@ -29,3 +29,9 @@ test('quiet or silent audio is left intact rather than clipped aggressively', ()
   const audio=new Float32Array(200).fill(0.0001);
   assert.equal(trimSpeechEdges(audio,1000),audio);
 });
+test('a short introductory clause does not hide a later useful early boundary', () => {
+  const text = "Hello, I can help you build useful tools, and we can explore a new idea together.";
+  const split = takeSpeechChunks(text);
+  assert.equal(split.chunks[0], 'Hello, I can help you build useful tools,');
+  assert.equal(split.rest, 'and we can explore a new idea together.');
+});
