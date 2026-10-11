@@ -49,7 +49,7 @@ Sources: [Web Speech voice inventory](https://developer.mozilla.org/en-US/docs/W
 
 ## Conversation pacing repair — October 11, 2026
 
-Speech now starts from the first complete thought while the conversation model is still generating the rest of the reply. Neural speech prefers WebGPU, warms its kernels during preparation, trims excess silence at clip edges and schedules upcoming audio on the audio clock. Stop cancels both current and scheduled clips. The original Gemma model remains selectable; persona is retained, with the pause instruction clarified to normal conversational punctuation. A smaller Llama 3.2 1B is the new fast default, warmed before readiness.
+Speech now starts from the first complete thought while the conversation model is still generating the rest of the reply. Neural speech prefers WebGPU, warms its kernels during preparation, trims excess silence at clip edges and schedules upcoming audio on the audio clock. Stop cancels both current and scheduled clips. The original Gemma model remains selectable; persona is retained, with instructions clarified for normal punctuation and direct answers without invented backstories. A smaller Llama 3.2 1B is the new fast default, warmed before readiness.
 
 A same-device browser benchmark measured a 4.4-second phrase at 12.352 seconds generation on q8 WASM versus 1.082 seconds on fp32 WebGPU (4.475 seconds of audio). This measures synthesis, not total conversational response time. First downloads, cold startup, long prompts and hardware still affect latency; CPU fallback is slower. 24 regression checks cover streaming boundaries, retained words, silence trimming, scheduling and cancellation alongside voice selection.
 
