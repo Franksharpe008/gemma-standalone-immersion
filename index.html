@@ -267,6 +267,12 @@
             outline: none;
         }
 
+        #voice-select { width: 100%; max-width: 100%; }
+        #voice-status { color: var(--subtext); font-size: 0.65rem; line-height: 1.5; margin-top: 8px; }
+        #voice-status[data-state="error"] { color: #ffadad; }
+        .voice-actions { display: flex; gap: 6px; margin-top: 8px; }
+        input:disabled { opacity: 0.35; cursor: not-allowed; }
+
         button.toggle-btn.active {
             border-color: var(--accent);
             color: var(--accent);
@@ -470,24 +476,29 @@
 
             <div class="grid">
                 <div>
-                    <span class="console-label">Audio Matrix</span>
-                    <select id="voice-select">
-                        <option>Loading...</option>
+                    <label class="console-label" for="voice-select">Audio Matrix · English voice</label>
+                    <select id="voice-select" aria-describedby="voice-status">
+                        <option>Preparing natural English…</option>
                     </select>
+                    <div id="voice-status" role="status">Preparing natural English…</div>
+                    <div class="voice-actions">
+                        <button id="preview-voice" class="toggle-btn">Preview voice</button>
+                        <button id="stop-voice" class="toggle-btn">Stop voice</button>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 5px; align-items: flex-end;">
                     <button id="cadence-btn" class="toggle-btn">CADENCE</button>
                     <button id="hum-btn" class="toggle-btn">BIO-HUM</button>
-                    <button id="breath-btn" class="toggle-btn active">BREATH</button>
+                    <button id="breath-btn" class="toggle-btn">BREATH</button>
                 </div>
                 <div class="slider-group">
                     <div style="flex:1">
                         <span class="console-label">Rate: <span id="val-rate">1.0</span></span>
-                        <input type="range" id="rate-slider" min="0.5" max="2" step="0.05" value="1.0">
+                        <input type="range" id="rate-slider" aria-label="Speaking rate" min="0.5" max="2" step="0.05" value="1.0">
                     </div>
                     <div style="flex:1">
-                        <span class="console-label">Pitch: <span id="val-pitch">1.2</span></span>
-                        <input type="range" id="pitch-slider" min="0.5" max="2" step="0.05" value="1.2">
+                        <span class="console-label">Pitch: <span id="val-pitch">1.0</span></span>
+                        <input type="range" id="pitch-slider" aria-label="Device voice pitch" min="0.5" max="2" step="0.05" value="1.0">
                     </div>
                 </div>
             </div>
@@ -510,6 +521,7 @@
     </div>
 
     <script type="module">
+        import { createSpeechController } from "./src/speech.js";
         // Start the same edge model automatically; inference stays on this device.
 
         const chatContainer = document.getElementById("chat-container");
@@ -532,10 +544,10 @@
         let engine;
         let initializing = false;
         let history = [];
-        let selectedVoice = null;
+
         let useCadence = false;
         let useHum = false;
-        let useBreath = true;
+        let useBreath = false;
         let audioCtx;
         let humOscillator;
         let humGainNode;
@@ -606,54 +618,23 @@
         pitchSlider.addEventListener('input', () => document.getElementById('val-pitch').textContent = pitchSlider.value);
 
         // --- VOICE ---
-        function initSmartVoices() {
-            // Clear and reload voices
-            window.speechSynthesis.cancel();
-            const voices = window.speechSynthesis.getVoices();
-
-            // Priority Score: Exact Google UK Female > Google UK > Neural > Other
-            const getScore = (v) => {
-                const n = v.name.toLowerCase();
-                if (n.includes("google") && n.includes("uk") && n.includes("female")) return 1000;
-                if (n.includes("google") && n.includes("uk")) return 800;
-                if (n.includes("neural")) return 500;
-                if (n.includes("google")) return 300;
-                return 0;
-            };
-
-            const sorted = voices.sort((a, b) => getScore(b) - getScore(a));
-            voiceSelect.innerHTML = "";
-
-            if (sorted.length === 0) {
-                voiceSelect.add(new Option("Scanning Voice Matrix...", ""));
-                return;
-            }
-
-            sorted.forEach(v => {
-                const label = getScore(v) >= 800 ? `${v.name} [OPTIMIZED]` : v.name;
-                voiceSelect.add(new Option(label, v.name));
-            });
-
-            // Lock to the best available
-            selectedVoice = sorted[0];
-            voiceSelect.value = selectedVoice.name;
-        }
-
-        // Force periodic scan until voices are found (Fixes Chrome/Edge delays)
-        let voiceScanInterval = setInterval(() => {
-            if (window.speechSynthesis.getVoices().length > 0) {
-                initSmartVoices();
-                clearInterval(voiceScanInterval);
-            }
-        }, 500);
-
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = initSmartVoices;
-        }
-
-        voiceSelect.addEventListener('change', () => {
-            selectedVoice = window.speechSynthesis.getVoices().find(v => v.name === voiceSelect.value);
+        const speech = createSpeechController({
+            select: voiceSelect,
+            status: document.getElementById('voice-status'),
+            pitch: pitchSlider,
+            rate: rateSlider,
+            cadence: () => useCadence,
+            audioContext: () => { initAudio(); return audioCtx; },
+            onState: state => {
+                setEyeState(state);
+                if (state === 'speaking') { startHum(); }
+                else stopHum();
+            },
         });
+        document.getElementById('preview-voice').addEventListener('click', () => {
+            speech.speak("Hi Frank. I'm Sienna. Let's make something useful together.");
+        });
+        document.getElementById('stop-voice').addEventListener('click', speech.stop);
 
         // --- ENGINE ---
         function cleanText(text) {
@@ -673,44 +654,8 @@
 
         function speakText(text) {
             const clean = cleanText(text).replace(/\n/g, ". ");
-            if (!clean.trim()) return;
-
-            // Browser safety: Ensure speech is resumed and context is active
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.resume();
-            initAudio();
-
-            if (useCadence) {
-                const chunks = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
-                let queueIndex = 0;
-                setEyeState('speaking');
-                startHum();
-                const speakNext = () => {
-                    if (queueIndex >= chunks.length) { stopHum(); setEyeState('idle'); return; }
-                    let chunk = chunks[queueIndex].trim();
-                    if (!chunk) { queueIndex++; speakNext(); return; }
-                    if (Math.random() < 0.1 && useBreath) playHumanBreath();
-                    const u = new SpeechSynthesisUtterance(chunk);
-                    if (selectedVoice) u.voice = selectedVoice;
-                    let baseRate = parseFloat(rateSlider.value);
-                    let basePitch = parseFloat(pitchSlider.value);
-                    u.rate = baseRate * (0.92 + Math.random() * 0.16);
-                    u.pitch = basePitch * (0.97 + Math.random() * 0.06);
-                    u.onend = () => { queueIndex++; setTimeout(speakNext, 60); };
-                    u.onerror = () => { queueIndex++; speakNext(); };
-                    window.speechSynthesis.speak(u);
-                }
-                speakNext();
-            } else {
-                const u = new SpeechSynthesisUtterance(clean);
-                if (selectedVoice) u.voice = selectedVoice;
-                u.rate = parseFloat(rateSlider.value);
-                u.pitch = parseFloat(pitchSlider.value);
-                setEyeState('speaking');
-                u.onstart = () => { if (useHum) startHum(); };
-                u.onend = () => { stopHum(); setEyeState('idle'); };
-                window.speechSynthesis.speak(u);
-            }
+            if (useBreath) playHumanBreath();
+            return speech.speak(clean);
         }
 
         function appendMessage(role, text, isStatus = false) {
@@ -748,7 +693,7 @@
                 const webllm = await import("https://esm.run/@mlc-ai/web-llm@0.2.85");
                 engine = await webllm.CreateMLCEngine("gemma-2b-it-q4f16_1-MLC", { initProgressCallback });
                 loadingBar.style.display = "none";
-                document.getElementById("boot-message").textContent = "EDGE MODEL READY · Gemma is running on this device. Type a prompt to begin. Browser speech uses available device voices.";
+                document.getElementById("boot-message").textContent = "EDGE MODEL READY · Gemma is running on this device. Type a prompt to begin. The English voice prepares independently. Use Preview voice to check the sound.";
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.placeholder = "Ask anything...";
@@ -767,6 +712,9 @@
             const text = userInput.value.trim();
             if (!text) return;
             if (!engine) { loadingStatus.textContent = "The edge model is not ready yet. Your typed prompt is kept until you press Execute."; return; }
+            // Unlock audio in the user's click, before the asynchronous model reply arrives.
+            speech.stop();
+            speech.unlock().catch(() => {});
             userInput.value = "";
             userInput.disabled = true;
             sendBtn.disabled = true;
